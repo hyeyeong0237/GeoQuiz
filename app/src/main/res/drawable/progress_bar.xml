@@ -25,6 +25,5 @@
             </shape>
         </scale>
 
-        <solid android:color="@color/gray"/>
     </item>
 </layer-list>

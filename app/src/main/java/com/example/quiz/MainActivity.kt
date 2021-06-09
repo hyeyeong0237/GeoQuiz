@@ -8,8 +8,14 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
+
+
 
 private const val TAG = "MainActivity"
+private const val KEY_INDEX = "index"
+private const val KEY_COUNT = "Count"
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,24 +28,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var quizProgress : TextView
     private lateinit var quizBar : ProgressBar
 
-    private var questionBank = listOf(
-        Question(R.string.question_australia, true) ,
-        Question(R.string.question_ocean, true) ,
-        Question(R.string.question_mideast, false) ,
-        Question(R.string.question_africa, false) ,
-        Question(R.string.question_america, true) ,
-        Question(R.string.question_aisa, true)
-    )
-    var score = 0;
-    var answeredCount = 0;
-    private var currentIndex = 0
-    private var currentAnswer = true
-    var userAnswer = arrayOfNulls<Boolean>(questionBank.size)
+    private val quizViewModel :QuizViewModel by lazy {
+        ViewModelProvider(this).get(QuizViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG,"onCreate(Bundle?) called")
         setContentView(R.layout.activity_main)
+
+        val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?:0
+        quizViewModel.currentIndex =currentIndex
+        val answerCounts = savedInstanceState?.getInt(KEY_COUNT, 0) ?:0
+        quizViewModel.answeredCount = answerCounts
 
         trueButton = findViewById(R.id.true_button)
         falseButton =findViewById(R.id.false_button)
@@ -51,21 +52,19 @@ class MainActivity : AppCompatActivity() {
         quizBar = findViewById(R.id.progress_bar)
 
         trueButton.setOnClickListener{ view : View ->
-            trueButton.setBackgroundColor(Color.BLUE)
-            falseButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
-            currentAnswer = true;
+            trueButtonPressed()
+            quizViewModel.currentAnswer = true
 
 
         }
         falseButton.setOnClickListener{ view : View ->
-            falseButton.setBackgroundColor(Color.BLUE)
-            trueButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
-            currentAnswer = false;
+            falseButtonPressed()
+            quizViewModel.currentAnswer = false
 
         }
         nextButton.setOnClickListener {
-            if(currentIndex == questionBank.size-1){
-                if(isNull()) {
+            if(quizViewModel.currentIndex== quizViewModel.questionBank.size-1){
+                if(quizViewModel.isNull()) {
                     val builder = AlertDialog.Builder(this)
                     builder.setTitle("아직 풀지 않은 문제가 있습니다")
                     builder.setMessage("그래도 점수를 확인 하시겠습니까?")
@@ -83,66 +82,57 @@ class MainActivity : AppCompatActivity() {
 
 
             }else{
-                currentIndex = (currentIndex + 1)
-                isAnswered(currentIndex)
-                updateQuestion();
+                quizViewModel.moveToNext()
+                isAnswered(quizViewModel.currentIndex)
+                updateQuestion()
             }
 
         }
         previousButton.setOnClickListener {
-            if(currentIndex == 0){
+            if(quizViewModel.currentIndex == 0){
                 Toast.makeText(this, "뒤로 갈 수 없습니다", Toast.LENGTH_SHORT).show()
             }else{
-                currentIndex = (currentIndex  - 1)
-                isAnswered(currentIndex)
-                updateQuestion();
+                quizViewModel.moveToPrevious()
+                isAnswered(quizViewModel.currentIndex)
+                updateQuestion()
             }
 
         }
         submitButton.setOnClickListener {
-            if(questionBank[currentIndex].answered == false){
-                checkAnswer(currentAnswer);
-                answeredCount++
-                questionBank[currentIndex].answered = true
-                userAnswer[currentIndex] = currentAnswer;
+            if(!(quizViewModel.currentQuestionAnswered)){
+                checkAnswer(quizViewModel.currentAnswer)
+                quizViewModel.answeredCount++
+                quizViewModel.questionAnswered()
+                quizViewModel.userAnswer[quizViewModel.currentIndex] = quizViewModel.currentAnswer
             }
-            isAnswered(currentIndex)
-            updateQuestion();
+            isAnswered(quizViewModel.currentIndex)
+            updateQuestion()
         }
 
-
-        updateQuestion();
+        isAnswered(quizViewModel.currentIndex)
+        updateQuestion()
     }
 
     private fun showAnswer(){
         trueButton.visibility = View.GONE
         falseButton.visibility = View.GONE
         submitButton.visibility = View.GONE
-        checkScore()
-        val answer = "총 점수는 ${score}/60 입니다"
+        quizViewModel.checkScore()
+        val answer = "총 점수는 ${quizViewModel.score}/60 입니다"
         questionTextView.setText(answer)
     }
-    private  fun isNull(): Boolean{
-        for(b in userAnswer) {
-            if (b == null) {
-                return true
-            }
-        }
-        return false
-    }
+
 
     private  fun isAnswered(index: Int){
-        val isQuestionAnswered = questionBank[index].answered
-        if(isQuestionAnswered == false){
+        val isQuestionAnswered = quizViewModel.currentQuestionAnswered
+        if(!(isQuestionAnswered)){
             trueButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
             falseButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
         }else{
-            if(userAnswer[index] == true){
-                trueButton.setBackgroundColor(Color.BLUE)
-                falseButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
+            if(quizViewModel.userAnswer[index]){
+                trueButtonPressed()
             }else{
-                falseButton.setBackgroundColor(Color.BLUE)
-                trueButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
+                falseButtonPressed()
             }
         }
         trueButton.isEnabled = !isQuestionAnswered
@@ -150,25 +140,28 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun trueButtonPressed(){
+        trueButton.setBackgroundColor(Color.BLUE)
+        falseButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
+    }
+
+    private fun falseButtonPressed(){
+        falseButton.setBackgroundColor(Color.BLUE)
+        trueButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
+    }
+
 
     private fun updateQuestion() {
-        val questionTextResId = questionBank[currentIndex].textResId
+        val questionTextResId = quizViewModel.currentQuestionText
         questionTextView.setText(questionTextResId)
-        quizProgress.setText("${answeredCount}/6")
-        quizBar.setProgress(answeredCount)
+        quizProgress.setText("${quizViewModel.answeredCount}/6")
+        quizBar.setProgress(quizViewModel.answeredCount)
 
 
     }
 
-    private fun checkScore(){
-        for(i in 0..5){
-            if(userAnswer[i] == questionBank[i].answer){
-                score += 10
-            }
-        }
-    }
     private fun checkAnswer(userAnswer: Boolean){
-        var correctAnswer = questionBank[currentIndex].answer
+        val correctAnswer = quizViewModel.currentQuestionAnswer
         val messageResId = if(correctAnswer == userAnswer){
             R.string.correct_toast
         }else{
@@ -176,6 +169,8 @@ class MainActivity : AppCompatActivity() {
         }
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
     }
+
+
     override fun onStart() {
         super.onStart()
         Log.d(TAG, "onStart() called")
@@ -199,5 +194,12 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy() called")
+    }
+
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        Log.d(TAG, "onSavedInstaceState")
+        savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)
+        savedInstanceState.putInt(KEY_COUNT, quizViewModel.answeredCount)
     }
 }
