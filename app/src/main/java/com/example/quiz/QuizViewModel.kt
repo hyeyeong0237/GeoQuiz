@@ -16,7 +16,7 @@ class QuizViewModel : ViewModel(){
     var score = 0
     var answeredCount = 0
     var currentAnswer = true
-    var userAnswer : BooleanArray = booleanArrayOf(true,true,true,true,true,true)
+    var userAnswer  = arrayOfNulls<Boolean>(questionBank.size)
 
 
 

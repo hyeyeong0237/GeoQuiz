@@ -52,14 +52,14 @@ class MainActivity : AppCompatActivity() {
         quizBar = findViewById(R.id.progress_bar)
 
         trueButton.setOnClickListener{ view : View ->
-            trueButtonPressed()
             quizViewModel.currentAnswer = true
+            buttonChecked(quizViewModel.currentAnswer)
 
 
         }
         falseButton.setOnClickListener{ view : View ->
-            falseButtonPressed()
             quizViewModel.currentAnswer = false
+            buttonChecked(quizViewModel.currentAnswer)
 
         }
         nextButton.setOnClickListener {
@@ -125,29 +125,27 @@ class MainActivity : AppCompatActivity() {
 
     private  fun isAnswered(index: Int){
         val isQuestionAnswered = quizViewModel.currentQuestionAnswered
-        if(!(isQuestionAnswered)){
-            trueButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
-            falseButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
+        if(quizViewModel.userAnswer[quizViewModel.currentIndex] == true){
+            buttonChecked(true)
+        }else if(quizViewModel.userAnswer[quizViewModel.currentIndex] == false){
+            buttonChecked(false)
         }else{
-            if(quizViewModel.userAnswer[index]){
-                trueButtonPressed()
-            }else{
-                falseButtonPressed()
-            }
+            trueButton.isSelected = false;
+            falseButton.isSelected = false;
         }
         trueButton.isEnabled = !isQuestionAnswered
         falseButton.isEnabled = !isQuestionAnswered
 
     }
 
-    private fun trueButtonPressed(){
-        trueButton.setBackgroundColor(Color.BLUE)
-        falseButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
-    }
-
-    private fun falseButtonPressed(){
-        falseButton.setBackgroundColor(Color.BLUE)
-        trueButton.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_200))
+    private fun buttonChecked(input : Boolean){
+        if(input){
+            trueButton.isSelected =true;
+            falseButton.isSelected = false;
+        }else{
+            trueButton.isSelected =false;
+            falseButton.isSelected = true;
+        }
     }
 
 
