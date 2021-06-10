@@ -13,9 +13,11 @@ class QuizViewModel : ViewModel(){
         Question(R.string.question_aisa, true)
     )
     var currentIndex = 0
+    var isCheater = false
+    var cheatCount = 3
     var score = 0
     var answeredCount = 0
-    var currentAnswer = true
+    var currentAnswer : Boolean? = null
     var userAnswer  = arrayOfNulls<Boolean>(questionBank.size)
 
 
@@ -31,11 +33,11 @@ class QuizViewModel : ViewModel(){
 
 
     fun moveToNext(){
-        currentIndex = (currentIndex + 1)
+        currentIndex = (currentIndex + 1) % questionBank.size
     }
 
     fun moveToPrevious(){
-        currentIndex = (currentIndex - 1)
+        currentIndex = (currentIndex + 5) % questionBank.size
     }
 
     fun questionAnswered(){
@@ -43,12 +45,13 @@ class QuizViewModel : ViewModel(){
     }
 
     fun checkScore(){
-        for(i in 0..5){
+        for(i in 0 until questionBank.size){
             if(userAnswer[i] == questionBank[i].answer){
                 score += 10
             }
         }
     }
+
    fun isNull(): Boolean{
         for(b in userAnswer) {
             if (b == null) {

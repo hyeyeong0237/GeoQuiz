@@ -5,15 +5,37 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:gravity="center"
     tools:context=".MainActivity" >
+
+    <TextView
+        android:id="@+id/question_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="10dp"
+        android:padding="20dp"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textAlignment="center"
+        tools:text="@string/question_australia" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="5dp"
         android:orientation="horizontal"
         android:padding="15dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="15dp"
+            android:text="Total"
+            android:textColorHint="#7A8089"
+            android:textSize="14sp" />
 
         <ProgressBar
             android:id="@+id/progress_bar"
@@ -37,21 +59,49 @@
             tools:text="0/6" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/question_text_view"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="10dp"
-        android:padding="20dp"
-        android:textColor="@color/black"
-        android:textSize="20sp"
-        android:textAlignment="center"
-        tools:text="@string/question_australia" />
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="0dp"
+        android:orientation="horizontal"
+        android:padding="15dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="15dp"
+            android:text="Cheat"
+            android:textColorHint="#7A8089"
+            android:textSize="14sp" />
+
+        <ProgressBar
+            android:id="@+id/cheatprogress_bar"
+            style="@android:style/Widget.Material.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="3"
+            android:minHeight="50dp"
+            android:progress="3"
+            android:progressDrawable="@drawable/progress_bar" />
+
+        <TextView
+            android:id="@+id/cheat_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="15dp"
+            android:textColorHint="#7A8089"
+            android:textSize="14sp"
+            tools:text="3/3" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:layout_gravity="center"
         android:orientation="horizontal">
 
@@ -76,11 +126,17 @@
     </LinearLayout>
 
     <Button
+        android:id="@+id/cheat_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/cheat_button" />
+
+    <Button
         android:id="@+id/submit_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="15dp"
         android:backgroundTint="@color/black"
         android:text="@string/submit_button"
         android:textColor="@color/white"
@@ -91,8 +147,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="30dp"
-        android:layout_gravity="center">
+        android:layout_marginTop="10dp">
 
         <ImageButton
             android:id="@+id/previous_button"
@@ -106,7 +161,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/right_arrow" />
+
     </LinearLayout>
+
+    <Button
+        android:id="@+id/Score_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="점수 확인" />
 
 
 </LinearLayout>

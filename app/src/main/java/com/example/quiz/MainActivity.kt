@@ -1,6 +1,8 @@
 package com.example.quiz
 
+import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -15,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 private const val TAG = "MainActivity"
 private const val KEY_INDEX = "index"
 private const val KEY_COUNT = "Count"
+private const val REQUEST_CODE_CHEAT = 0
 
 
 class MainActivity : AppCompatActivity() {
@@ -24,6 +27,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nextButton: ImageButton
     private lateinit var previousButton: ImageButton
     private lateinit var submitButton: Button
+    private lateinit var cheatButton:  Button
+    private lateinit var scoreButton:  Button
+    private lateinit var cheatBar :ProgressBar
+    private lateinit var cheatProgress : TextView
     private lateinit var questionTextView: TextView
     private lateinit var quizProgress : TextView
     private lateinit var quizBar : ProgressBar
@@ -48,68 +55,101 @@ class MainActivity : AppCompatActivity() {
         previousButton = findViewById(R.id.previous_button)
         submitButton = findViewById(R.id.submit_button)
         questionTextView = findViewById(R.id.question_text_view)
+        cheatButton = findViewById(R.id.cheat_button)
+        scoreButton = findViewById(R.id.Score_button)
         quizProgress = findViewById(R.id.quiz_progress)
         quizBar = findViewById(R.id.progress_bar)
+        cheatProgress = findViewById(R.id.cheat_progress)
+        cheatBar = findViewById(R.id.cheatprogress_bar)
 
         trueButton.setOnClickListener{ view : View ->
             quizViewModel.currentAnswer = true
-            buttonChecked(quizViewModel.currentAnswer)
+            trueButton.isSelected =true
+            falseButton.isSelected = false
+            trueButton.setBackgroundResource(R.drawable.button)
+            falseButton.setBackgroundResource(R.drawable.button)
 
 
         }
         falseButton.setOnClickListener{ view : View ->
             quizViewModel.currentAnswer = false
-            buttonChecked(quizViewModel.currentAnswer)
+            trueButton.isSelected = false
+            falseButton.isSelected = true
+            trueButton.setBackgroundResource(R.drawable.button)
+            falseButton.setBackgroundResource(R.drawable.button)
 
         }
         nextButton.setOnClickListener {
-            if(quizViewModel.currentIndex== quizViewModel.questionBank.size-1){
-                if(quizViewModel.isNull()) {
-                    val builder = AlertDialog.Builder(this)
-                    builder.setTitle("아직 풀지 않은 문제가 있습니다")
-                    builder.setMessage("그래도 점수를 확인 하시겠습니까?")
-                    builder.setPositiveButton("네") { dialog, which ->
-                        showAnswer()
-                    }
-                    builder.setNegativeButton("아니오") { dialog, which ->
-                        Toast.makeText(this, "다시 문제를 확인해주세요", Toast.LENGTH_SHORT).show()
-                    }
-                    val dialog = builder.create()
-                    dialog.show()
-                }else {
-                    showAnswer()
-                }
-
-
-            }else{
-                quizViewModel.moveToNext()
-                isAnswered(quizViewModel.currentIndex)
-                updateQuestion()
-            }
+            quizViewModel.moveToNext()
+            buttonCheck()
+            updateQuestion()
 
         }
         previousButton.setOnClickListener {
-            if(quizViewModel.currentIndex == 0){
-                Toast.makeText(this, "뒤로 갈 수 없습니다", Toast.LENGTH_SHORT).show()
-            }else{
-                quizViewModel.moveToPrevious()
-                isAnswered(quizViewModel.currentIndex)
-                updateQuestion()
-            }
+
+            quizViewModel.moveToPrevious()
+            buttonCheck()
+            updateQuestion()
+
 
         }
         submitButton.setOnClickListener {
-            if(!(quizViewModel.currentQuestionAnswered)){
-                checkAnswer(quizViewModel.currentAnswer)
-                quizViewModel.answeredCount++
-                quizViewModel.questionAnswered()
-                quizViewModel.userAnswer[quizViewModel.currentIndex] = quizViewModel.currentAnswer
+            if(quizViewModel.currentQuestionAnswered) {
+                buttonCheck()
+                updateQuestion()
+            }else {
+                if(quizViewModel.currentAnswer == null) {
+                    Toast.makeText(this, "정답을 선택해 주세요", Toast.LENGTH_SHORT).show()
+                }else{
+                    checkAnswer(quizViewModel.currentAnswer!!)
+                    quizViewModel.answeredCount++
+                    quizViewModel.questionAnswered()
+                    quizViewModel.userAnswer[quizViewModel.currentIndex] = quizViewModel.currentAnswer
+                    buttonCheck()
+                    updateQuestion()
+                }
+
             }
-            isAnswered(quizViewModel.currentIndex)
-            updateQuestion()
+
         }
 
-        isAnswered(quizViewModel.currentIndex)
+
+        cheatButton.setOnClickListener {
+            if(quizViewModel.cheatCount == 0){
+                Toast.makeText(this, "더 이상 컨닝을 하실 수 없습니다", Toast.LENGTH_SHORT).show()
+            }else{
+                val answerIsTrue = quizViewModel.currentQuestionAnswer
+                val intent = CheatActivity.newIntent(this, answerIsTrue)
+                startActivityForResult(intent, REQUEST_CODE_CHEAT)
+            }
+
+        }
+
+        scoreButton.setOnClickListener {
+
+            if(quizViewModel.isNull()) {
+                val builder = AlertDialog.Builder(this)
+                builder.setTitle("아직 풀지 않은 문제가 있습니다")
+                builder.setMessage("그래도 점수를 확인 하시겠습니까?")
+                builder.setPositiveButton("네") { dialog, which ->
+                        showAnswer()
+                }
+                builder.setNegativeButton("아니오") { dialog, which ->
+                    Toast.makeText(this, "다시 문제를 확인해주세요", Toast.LENGTH_SHORT).show()
+                }
+                val dialog = builder.create()
+                dialog.show()
+            }else {
+                    showAnswer()
+            }
+
+
+
+
+        }
+
+
+        buttonCheck()
         updateQuestion()
     }
 
@@ -117,36 +157,51 @@ class MainActivity : AppCompatActivity() {
         trueButton.visibility = View.GONE
         falseButton.visibility = View.GONE
         submitButton.visibility = View.GONE
+        cheatButton.visibility = View.GONE
+        previousButton.visibility =View.GONE
+        nextButton.visibility = View.GONE
         quizViewModel.checkScore()
         val answer = "총 점수는 ${quizViewModel.score}/60 입니다"
         questionTextView.setText(answer)
     }
 
 
-    private  fun isAnswered(index: Int){
+    private  fun buttonCheck(){
         val isQuestionAnswered = quizViewModel.currentQuestionAnswered
-        if(quizViewModel.userAnswer[quizViewModel.currentIndex] == true){
-            buttonChecked(true)
-        }else if(quizViewModel.userAnswer[quizViewModel.currentIndex] == false){
-            buttonChecked(false)
+        trueButton.isEnabled = !isQuestionAnswered
+        falseButton.isEnabled = !isQuestionAnswered
+        if(isQuestionAnswered){
+            if(quizViewModel.userAnswer[quizViewModel.currentIndex] == quizViewModel.currentQuestionAnswer){
+                if(quizViewModel.currentQuestionAnswer == true){
+                    trueButton.isSelected =true;
+                    falseButton.isSelected = false;
+                }else if(quizViewModel.currentQuestionAnswer == false){
+                    trueButton.isSelected =false;
+                    falseButton.isSelected = true;
+                }
+                trueButton.setBackgroundResource(R.drawable.correct_button)
+                falseButton.setBackgroundResource(R.drawable.correct_button)
+            }else{
+                if(quizViewModel.userAnswer[quizViewModel.currentIndex] == true){
+                    trueButton.isSelected =true;
+                    falseButton.isSelected = false;
+                }else if(quizViewModel.userAnswer[quizViewModel.currentIndex] == false){
+                    trueButton.isSelected =false;
+                    falseButton.isSelected = true;
+                }
+                trueButton.setBackgroundResource(R.drawable.incorrect_button)
+                falseButton.setBackgroundResource(R.drawable.incorrect_button)
+            }
         }else{
             trueButton.isSelected = false;
             falseButton.isSelected = false;
+            trueButton.setBackgroundResource(R.drawable.button)
+            falseButton.setBackgroundResource(R.drawable.button)
+            quizViewModel.currentAnswer = null
         }
-        trueButton.isEnabled = !isQuestionAnswered
-        falseButton.isEnabled = !isQuestionAnswered
 
     }
 
-    private fun buttonChecked(input : Boolean){
-        if(input){
-            trueButton.isSelected =true;
-            falseButton.isSelected = false;
-        }else{
-            trueButton.isSelected =false;
-            falseButton.isSelected = true;
-        }
-    }
 
 
     private fun updateQuestion() {
@@ -154,16 +209,21 @@ class MainActivity : AppCompatActivity() {
         questionTextView.setText(questionTextResId)
         quizProgress.setText("${quizViewModel.answeredCount}/6")
         quizBar.setProgress(quizViewModel.answeredCount)
+        cheatProgress.setText("${quizViewModel.cheatCount}/3")
+        cheatBar.setProgress(quizViewModel.cheatCount)
+
 
 
     }
 
     private fun checkAnswer(userAnswer: Boolean){
         val correctAnswer = quizViewModel.currentQuestionAnswer
-        val messageResId = if(correctAnswer == userAnswer){
-            R.string.correct_toast
+        val messageResId : Int
+        if (correctAnswer == userAnswer) {
+            messageResId = R.string.correct_toast
         }else{
-            R.string.incorrect_toast
+
+            messageResId = R.string.incorrect_toast
         }
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
     }
@@ -192,6 +252,22 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy() called")
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?){
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if(resultCode != Activity.RESULT_OK){
+
+        }
+        if(requestCode == REQUEST_CODE_CHEAT){
+            quizViewModel.isCheater = data?.getBooleanExtra(EXTRA_ANSWER_SHOWN, false) ?: false
+            if(quizViewModel.isCheater){
+                quizViewModel.cheatCount--
+            }
+        }
+        buttonCheck()
+        updateQuestion()
     }
 
     override fun onSaveInstanceState(savedInstanceState: Bundle) {

@@ -11,4 +11,9 @@
     <string name="submit_button">Submit</string>
     <string name="correct_toast">정답입니다</string>
     <string name="incorrect_toast">틀렸습니다</string>
+    <string name="warning_text">정말로 답을 보시겠습니까?</string>
+    <string name="show_answer_button">정답보기</string>
+    <string name="cheat_button">커닝하기</string>
+    <string name="judgment_toast">커닝은 나쁜짓이죠</string>
+
 </resources>
