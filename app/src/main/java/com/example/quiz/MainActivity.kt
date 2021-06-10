@@ -11,7 +11,7 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
-
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 private const val TAG = "MainActivity"
@@ -66,17 +66,12 @@ class MainActivity : AppCompatActivity() {
             quizViewModel.currentAnswer = true
             trueButton.isSelected =true
             falseButton.isSelected = false
-            trueButton.setBackgroundResource(R.drawable.button)
-            falseButton.setBackgroundResource(R.drawable.button)
-
 
         }
         falseButton.setOnClickListener{ view : View ->
             quizViewModel.currentAnswer = false
             trueButton.isSelected = false
             falseButton.isSelected = true
-            trueButton.setBackgroundResource(R.drawable.button)
-            falseButton.setBackgroundResource(R.drawable.button)
 
         }
         nextButton.setOnClickListener {
@@ -86,11 +81,9 @@ class MainActivity : AppCompatActivity() {
 
         }
         previousButton.setOnClickListener {
-
             quizViewModel.moveToPrevious()
             buttonCheck()
             updateQuestion()
-
 
         }
         submitButton.setOnClickListener {
@@ -132,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                 builder.setTitle("아직 풀지 않은 문제가 있습니다")
                 builder.setMessage("그래도 점수를 확인 하시겠습니까?")
                 builder.setPositiveButton("네") { dialog, which ->
-                        showAnswer()
+                    showAnswer()
                 }
                 builder.setNegativeButton("아니오") { dialog, which ->
                     Toast.makeText(this, "다시 문제를 확인해주세요", Toast.LENGTH_SHORT).show()
@@ -142,8 +135,6 @@ class MainActivity : AppCompatActivity() {
             }else {
                     showAnswer()
             }
-
-
 
 
         }
@@ -160,6 +151,7 @@ class MainActivity : AppCompatActivity() {
         cheatButton.visibility = View.GONE
         previousButton.visibility =View.GONE
         nextButton.visibility = View.GONE
+        Score_button.visibility =View.GONE
         quizViewModel.checkScore()
         val answer = "총 점수는 ${quizViewModel.score}/60 입니다"
         questionTextView.setText(answer)
@@ -168,35 +160,26 @@ class MainActivity : AppCompatActivity() {
 
     private  fun buttonCheck(){
         val isQuestionAnswered = quizViewModel.currentQuestionAnswered
+        val userAnswer = quizViewModel.userAnswer[quizViewModel.currentIndex]
         trueButton.isEnabled = !isQuestionAnswered
         falseButton.isEnabled = !isQuestionAnswered
         if(isQuestionAnswered){
-            if(quizViewModel.userAnswer[quizViewModel.currentIndex] == quizViewModel.currentQuestionAnswer){
-                if(quizViewModel.currentQuestionAnswer == true){
-                    trueButton.isSelected =true;
-                    falseButton.isSelected = false;
-                }else if(quizViewModel.currentQuestionAnswer == false){
-                    trueButton.isSelected =false;
-                    falseButton.isSelected = true;
-                }
-                trueButton.setBackgroundResource(R.drawable.correct_button)
-                falseButton.setBackgroundResource(R.drawable.correct_button)
+            if(userAnswer == quizViewModel.currentQuestionAnswer){
+                trueButton.isSelected = userAnswer
+                falseButton.isSelected = !userAnswer
+                trueButton.setTextColor(ContextCompat.getColorStateList(this,R.color.correct_button))
+                falseButton.setTextColor(ContextCompat.getColorStateList(this,R.color.correct_button))
             }else{
-                if(quizViewModel.userAnswer[quizViewModel.currentIndex] == true){
-                    trueButton.isSelected =true;
-                    falseButton.isSelected = false;
-                }else if(quizViewModel.userAnswer[quizViewModel.currentIndex] == false){
-                    trueButton.isSelected =false;
-                    falseButton.isSelected = true;
-                }
-                trueButton.setBackgroundResource(R.drawable.incorrect_button)
-                falseButton.setBackgroundResource(R.drawable.incorrect_button)
+                trueButton.isSelected = userAnswer!!
+                falseButton.isSelected = !userAnswer!!
+                trueButton.setTextColor(ContextCompat.getColorStateList(this,R.color.incorrect_button))
+                falseButton.setTextColor(ContextCompat.getColorStateList(this,R.color.incorrect_button))
             }
         }else{
             trueButton.isSelected = false;
             falseButton.isSelected = false;
-            trueButton.setBackgroundResource(R.drawable.button)
-            falseButton.setBackgroundResource(R.drawable.button)
+            trueButton.setTextColor(ContextCompat.getColorStateList(this,R.color.string_sector))
+            falseButton.setTextColor(ContextCompat.getColorStateList(this,R.color.string_sector))
             quizViewModel.currentAnswer = null
         }
 
